@@ -9,7 +9,7 @@ Aim is to Detect the different currency notes of India
 
 ## About Project
 * The Project aims for detecting the different currency Notes of India and giving the correct output. The purpose of the project is that, As there are physically disable people in our country, this project would help to identify different currency notes. For Eg : For the blind person, When they are doing money transaction, as they are not able to see, this project would help them to do the transactions. 
-* How this Project Useful - I have done research and found that, Person without seeing can **hold the currency notes in 8 different forms**. I have shown the image below considering 8 different forms. The computer vision Algorithm i.e single shot mulitbox detector detects the currency notes in all 8 directions forms and hence making it Easier for the Blind person for doing the Transactions.  
+* How this Project Useful - I have done research and found that, Person without seeing can **hold the currency notes in 8 different forms**. I have shown the image below considering 8 different forms. The computer vision Algorithm i.e single shot mulitbox detector detects the currency notes in all 8 directions forms and hence making it Easier for the Blind person for doing the Transactions. I have taken into consideration 9 types of Currency Notes - `10Rs New Version Notes, 10Rs Old Version Notes, 20Rs Notes, 50Rs New Version Notes, 50Rs Old Version Notes, 100Rs New Version Notes, 100Rs Old Version Notes, 200Rs Notes, 500Rs Notes`.  
 
 ## Detailed Explanation about Project
 **I HAVE GIVEN DETAILED EXPLANATION OF EACH AND EVERY LINE OF MY CODE**
@@ -54,3 +54,183 @@ Aim is to Detect the different currency notes of India
   	pipeline_fname = os.path.join('/content/models/research/object_detection/samples/configs/', pipeline_file)
     assert os.path.isfile(pipeline_fname), '`{}` not exist'.format(pipeline_fname)
     ```
+
+* Now we need to define the `labelmap` - In a computer vision dataset, it is common to have annotations referring to class labels. Here for the different types of Currency Notes, the class labels include `shapes, colors, size`. In order to annotate an image, an image annotation file will often define the annotations specific to a particular image. In the case where the annotation file does not specify class labels, a label map is referenced to look up the class name. The label map is the separate source of record for class annotations. So first we import the label_map_util - the inbuilt function. Label maps map indices to category names, so that when our convolution network predicts `1`, we know that this corresponds to `10Rs New Notes`, `3` is for `20 Rs Notes` and so on for other Currency Notes of India. So we convert the label map to categories and then we get the category index with the categories and at last we calculate the len of the category indexes as keys. 
+    ```
+    def get_num_classes(pbtxt_fname):
+    from object_detection.utils import label_map_util
+    label_map = label_map_util.load_labelmap(pbtxt_fname)
+    categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=90, use_display_name=True)
+    category_index = label_map_util.create_category_index(categories)
+    return len(category_index.keys())
+    ```
+    
+ Now to start the training - We will do `model_dir = 'training/'` and if we want to remove the content if it is already present in the output directory i.e invlaid data then to use `!rm -rf {model_dir}`. Now we will make the directory - This means, `os.makedirs()` method in Python is used to create a directory recursively. That means while making leaf directory if any intermediate-level directory is missing, os.makedirs() method will create them all. It defines the `path` and `directory exist or not`. Its syntax is `Syntax: os.makedirs(path, exist_ok = False)` - Path: A path-like object representing a file system path. A path-like object is either a string or bytes object representing a path. exist_ok (optional) : A default value `False` is used for this parameter. If the target directory already exists, if its value is false then OSError is raised otherwise not. For value True, it leaves target directory unaltered.
+    ```
+    model_dir = 'training/'
+    !rm -rf {model_dir}
+    os.makedirs(model_dir, exist_ok=True)
+    ```
+
+* Now comes the main part of training the model. we define `pipeline_config_path`, `model_dir`, `number of training steps`, `number of Evaluation steps` and `logtostderr`. As name suggest `logtostderr` sends the logs to STDERR i.e standard error file. This means : Every command could send it's output to one of two places: a) it could be valid output or b) it could be an error message. It does the same with the errors as it does with the standard output; it sends them directly to your terminal screen if their are any. 
+    ```
+    !python /content/models/research/object_detection/model_main.py \
+    --pipeline_config_path={pipeline_fname} \
+    --model_dir={model_dir} \
+    --alsologtostderr \
+    --num_train_steps={num_steps} \
+    --num_eval_steps={num_eval_steps}
+    ```
+    
+* Then will use `!ls {model_dir}` to convert it to the list. `model_dir` is used to check for the trained model. 
+
+* Now to do the work of Exporting a Trained Inference Graph. Once your training job is complete, you need to extract the newly trained inference graph, which will be later used to perform the object detection. So we define `input type` i.e `image tensor`, so Tensor(i.e. multidimensional array) is a natural representation for image and video. The resulted new research topic, called tensor image processing, offers new tools to exploit the multi-dimensional and intrinsic structures in image data. Another is `pipeline_config_path`, `output_directory` and `trained_checkpoint_prefix` where Checkpoints capture the exact value of all parameters used by a model. Checkpoints do not contain any description of the computation defined by the model and thus are typically only useful when source code that will use the saved parameter values is available.
+    ```
+    last_model_path = os.path.join(model_dir, last_model)
+    print(last_model_path)
+    !python /content/models/research/object_detection/export_inference_graph.py \
+        --input_type=image_tensor \
+        --pipeline_config_path={pipeline_fname} \
+        --output_directory={output_directory} \
+        --trained_checkpoint_prefix={last_model_path}
+    ```
+ 
+* When we defined Trained Inference Graph, we would be now joining the output directory along as with `frozen_inference_graph.pb` -> `frozen_inference_graph.pb`, is a frozen graph that cannot be trained anymore, it defines the graphdef and is actually a serialized graph. Also on output directory we would be abspath(output_directory), as `abspath(path)` returns a normalized absolutized version of the pathname path i.e output_directory. 
+    ```
+    import os
+    pb_fname = os.path.join(os.path.abspath(output_directory), "frozen_inference_graph.pb")
+    assert os.path.isfile(pb_fname), '`{}` not exist'.format(pb_fname) -----------------------> Explained in Above points :)
+    ```
+
+* Next is to do the Google Authentication as we are using Google colab for GPU purpose. This only needs to be done once in a notebook.
+    ```
+    # Install the PyDrive wrapper & import libraries.
+    # This only needs to be done once in a notebook.
+    !pip install -U -q PyDrive
+    from pydrive.auth import GoogleAuth
+    from pydrive.drive import GoogleDrive
+    from google.colab import auth
+    from oauth2client.client import GoogleCredentials
+
+    # Authenticate and create the PyDrive client.
+    # This only needs to be done once in a notebook.
+    auth.authenticate_user()
+    gauth = GoogleAuth()
+    gauth.credentials = GoogleCredentials.get_application_default()
+    drive = GoogleDrive(gauth)
+
+    fname = os.path.basename(pb_fname)
+    # Create & upload a text file.
+    uploaded = drive.CreateFile({'title': fname})
+    uploaded.SetContentFile(pb_fname)
+    uploaded.Upload()
+    
+    from google.colab import files
+    files.download(label_map_pbtxt_fname)
+    
+    files.download(pipeline_fname)
+    ```
+
+* We will first define the Path to frozen detection graph in `PATH_TO_CKPT` as this is the actual model that is used for the object detection. Then we would be setting the List of the strings that is used to add correct label for each box using `PATH_TO_LABELS = label_map_pbtxt_fname`. Now comes the main part of **Texting the code on the validation data**, so in this, just add images files to the `PATH_TO_TEST_IMAGES_DIR`. Then with use of `assert` we would be checking if `pb_fname` and `PATH_TO_LABELS` exist or not. Now with the help of `glob` module, I would be retriving files/pathnames matching a specified pattern. The pattern rules of glob follow standard Unix path expansion rules. It is also predicted that according to benchmarks it is faster than other methods to match pathnames in directories. With glob, we can also use wildcards ('.', ?) apart from exact string search to make path retrieval more simple and convenient. As in this case we are using '.' then its easy to retrive that Path. Finally, we would be checking if `TEST_IMAGE_PATHS` exist or not. If it exist then we would print that Path in the output, and if it does not exist then with the help of `.format()`, we would print that `No image found in PATH_TO_TEST_IMAGES_DIR`. Existing of the path is checked with the help that `len(TEST_IMAGE_PATHS) > 0` or not.
+    ```
+    import os
+    import glob
+    PATH_TO_CKPT = pb_fname
+    PATH_TO_LABELS = label_map_pbtxt_fname
+    PATH_TO_TEST_IMAGES_DIR =  os.path.join('/content/drive/My Drive/multiple rice detection/data/Images/', "test_ri")
+    assert os.path.isfile(pb_fname)
+    assert os.path.isfile(PATH_TO_LABELS)
+    TEST_IMAGE_PATHS = glob.glob(os.path.join(PATH_TO_TEST_IMAGES_DIR, "*.*"))
+    assert len(TEST_IMAGE_PATHS) > 0, 'No image found in `{}`.'.format(PATH_TO_TEST_IMAGES_DIR)
+    print(TEST_IMAGE_PATHS)
+    ```
+    
+* Now comes the part of detecting the object. First we would be importing the neccessary libraries. Then will do `sys.path.append("..")` as **notebook is stored in the object_detection folder.** So `sys.path` is a built-in variable within the `sys` module. It contains a list of directories that the interpreter will search in for the required module. As we are appending, So `append()` is a built-in function of sys module that can be used with path variable to add a specific path for interpreter to search. For displaying the image we would be using 3 below commands
+    ```
+    %matplotlib inline
+    import matplotlib.pyplot as plt
+    from PIL import Image
+    ```
+
+* Then will load `labelmap`, then in categories we would be converting the labelmap to categories and finally we would be creating the `category_index` (Explanation of all this terms is done above). Along with this we will **load a (frozen) Tensorflow model into memory**.
+    ```
+    label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
+    categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes, use_display_name=True)
+    category_index = label_map_util.create_category_index(categories)
+    
+    detection_graph = tf.Graph()
+    with detection_graph.as_default():
+    od_graph_def = tf.GraphDef()
+    with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
+        serialized_graph = fid.read()
+        od_graph_def.ParseFromString(serialized_graph)
+        tf.import_graph_def(od_graph_def, name='')
+    ```
+    
+* We would be loading the image in the form of the numpy array where we would be getting the `im_width` and `im_height` from image size and finally we would be returning the numpy array and would be reshaping to 3D array by taking `im_width`, `im_height` and `dimension` which means there would be dimension numbers of sub-arrays. Also we would be setting the Size, in inches for the output images. Here taking `IMAGE_SIZE = (20, 15)`. 
+    ```
+    def load_image_into_numpy_array(image):
+    (im_width, im_height) = image.size
+    return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+    ```
+    
+ * Now we would be defining the 5 parameters - `'num_detections', 'detection_boxes', 'detection_scores', 'detection_classes', 'detection_masks'` for only the single image. Now to get the handle of input and output tensor, we will use `ops = tf.get_default_graph().get_operations()`. Then we would create the tensor dictionary which would contain `'num_detections', 'detection_boxes', 'detection_scores', 'detection_classes', 'detection_masks'` as the key value. Then will check for the condition of `'detection_masks' in tensor_dict`, we are going to process the `detection_boxes` and `detection_masks` for the single image. So here we are using `detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])`, This tf.squeeze means - Given a tensor input, this operation returns a tensor of the same type with all dimensions of size 1 removed. If you don't want to remove all size 1 dimensions, you can remove specific size 1 dimensions by specifying axis. So here we are removing size 1 dimension of 1st axis (0th index). Same goes for `detection_mask`. We would calculate `real_num_detection` by `tf.cast(tensor_dict['num_detections'][0], tf.int32)` in which the operation casts x (in case of Tensor) or x.values (in case of SparseTensor) to dtype (destination type). Next is : Reframe is required to translate mask from box coordinates to image coordinates and fit the image size, For this it is implemented using `detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(detection_masks, detection_boxes, image.shape[0], image.shape[1])` And at last we would add back the batch dimension for originilty by using `tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)`. Finally we would be converting all the outputs i.e `'detection_boxes', 'detection_scores', 'detection_classes', 'detection_masks'` that are in float32 numpy arrays, into appropriate types as required and returning the `output_idict`
+    ```
+    def run_inference_for_single_image(image, graph):
+    with graph.as_default():
+        with tf.Session() as sess:
+            # Get handles to input and output tensors
+            ops = tf.get_default_graph().get_operations()
+            all_tensor_names = {output.name for op in ops for output in op.outputs}
+            tensor_dict = {}
+            for key in [
+                'num_detections', 'detection_boxes', 'detection_scores',
+                'detection_classes', 'detection_masks'
+            ]:
+                tensor_name = key + ':0'
+                if tensor_name in all_tensor_names:
+                    tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(tensor_name)
+            if 'detection_masks' in tensor_dict:
+                # The following processing is only for single image
+                detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
+                detection_masks = tf.squeeze(tensor_dict['detection_masks'], [0])
+                # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
+                real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
+                detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(detection_masks, detection_boxes, image.shape[0], image.shape[1])
+                detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.9), tf.uint8)
+                # Follow the convention by adding back the batch dimension
+                tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
+            image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
+            output_dict = sess.run(tensor_dict, feed_dict={image_tensor: np.expand_dims(image, 0)})
+
+            # all outputs are float32 numpy arrays, so convert types as appropriate
+            output_dict['num_detections'] = int(output_dict['num_detections'][0])
+            output_dict['detection_classes'] = output_dict['detection_classes'][0].astype(np.uint8)
+            output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
+            output_dict['detection_scores'] = output_dict['detection_scores'][0]
+            if 'detection_masks' in output_dict:
+                output_dict['detection_masks'] = output_dict['detection_masks'][0]
+    return output_dict
+    ```
+
+* We would first open the image through `Image.open(image_path)`. Then we would be loading the image into numpy_array as the array based representation of the image will be used later in order to prepare the result image with boxes and labels on it. Then for actual detection we use the above function that I wrote - `run_inference_for_single_image`. And finally we visualize the boxes and labels on image array by different parameters i.e `detection_boxes, detection_classes, detection_scores` as the key. Finally ,we would be outputting the image with the `IMAGE_SIZE` that was decided earlier. 
+    ```
+    for image_path in TEST_IMAGE_PATHS:
+    image = Image.open(image_path)
+    # the array based representation of the image will be used later in order to prepare the
+    # result image with boxes and labels on it.
+    image_np = load_image_into_numpy_array(image)
+    output_dict = run_inference_for_single_image(image_np, detection_graph) # Actual detection.
+    # Visualization of the results of a detection.
+    vis_util.visualize_boxes_and_labels_on_image_array(
+        image_np,
+        output_dict['detection_boxes'],
+        output_dict['detection_classes'],
+        output_dict['detection_scores'],
+        category_index,
+        instance_masks=output_dict.get('detection_masks'),
+        use_normalized_coordinates=True,
+        line_thickness=8)
+    plt.figure(figsize=IMAGE_SIZE)
+    plt.imshow(image_np)
+    ```      
