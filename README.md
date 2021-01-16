@@ -9,7 +9,11 @@ Aim is to Detect the different currency notes of India
 
 ## About Project
 * The Project aims for detecting the different currency Notes of India and giving the correct output. The purpose of the project is that, As there are physically disable people in our country, this project would help to identify different currency notes. For Eg : For the blind person, When they are doing money transaction, as they are not able to see, this project would help them to do the transactions. 
-* How this Project Useful - I have done research and found that, Person without seeing can **hold the currency notes in 8 different forms**. I have shown the image below considering 8 different forms. The computer vision Algorithm i.e single shot mulitbox detector detects the currency notes in all 8 directions forms and hence making it Easier for the Blind person for doing the Transactions. I have taken into consideration 9 types of Currency Notes - `10Rs New Version Notes, 10Rs Old Version Notes, 20Rs Notes, 50Rs New Version Notes, 50Rs Old Version Notes, 100Rs New Version Notes, 100Rs Old Version Notes, 200Rs Notes, 500Rs Notes`.  
+* How this Project Useful - I have done research and found that, Person without seeing can **hold the currency notes in 8 different forms**. I have shown the image below considering 8 different forms. The computer vision Algorithm i.e single shot mulitbox detector detects the currency notes in all 8 directions forms and hence making it Easier for the Blind person for doing the Transactions. I have taken into consideration 9 types of Currency Notes - `10Rs New Version Notes, 10Rs Old Version Notes, 20Rs Notes, 50Rs New Version Notes, 50Rs Old Version Notes, 100Rs New Version Notes, 100Rs Old Version Notes, 200Rs Notes, 500Rs Notes`.
+* **All the images are taken on background for this project are taken from Phone Camera and not taken from the internet**. 
+   <img src = "Images/All_8_Images_10Rs_New_Notes.jpg" width = "700">
+   <img src = "Images/All_8_Images_20Rs_Notes.jpg" width = "700">
+   <img src = "Images/All_8_Images_200Rs_Notes.jpg" width = "700">
 
 ## Detailed Explanation about Project
 **I HAVE GIVEN DETAILED EXPLANATION OF EACH AND EVERY LINE OF MY CODE**
@@ -234,3 +238,18 @@ Aim is to Detect the different currency notes of India
     plt.figure(figsize=IMAGE_SIZE)
     plt.imshow(image_np)
     ```      
+
+## Output Images
+
+  <img src = "Images/Output_Image3_200.jpg" width = "700">
+  <img src = "Images/Output_Image1_10_old.jpg" width = "700">
+  <img src = "Images/Output_Image2_50_old.jpg" width = "700">
+
+## About Me
+**IF YOU LIKED MY WORK, PLEASE HIT THE STAR BUTTON, AND IF POSSIBLE DO PLEASE SHARE, SO THAT COMMUNITY CAN GET BENIFIT OUT OF IT BEACUSE I AM EXLPANING EACH AND EVERY LINE OF CODE FOR EACH AND EVERY PROJECT OF MINE.**
+
+Also I am Solving **Algorithms and Data Structure Problems from more than 230 Days (More than 32 Weeks) Without any off-Day and have solved more than 405 Questions on various topics and posting my solutions on Github Daily**. You can Visit my Profile of LeetCode here - **https://leetcode.com/Nisarg1406/**
+
+I am good at Algorithms and Data structure and I have good Projects in Machine learning and Deep Learning (Computer Vision). **I am and would be posting the detialed explantion of each and every project working**. I am activily looking for an Internhip in **Software development enginering (SDE) Domain and Machine learning Domain**.
+
+You can contact me on my mail ID - nisarg.mehta18@vit.edu OR nisargmehta2000@gmail.com and even Contact me on LinkedIn - https://www.linkedin.com/in/nisarg-mehta-4a378a185/
